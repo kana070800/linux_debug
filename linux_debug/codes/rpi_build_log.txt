@@ -1,0 +1,33 @@
+make[1]: Entering directory '/home/kana/linux_debug/out'
+scripts/kconfig/conf  --syncconfig Kconfig
+  Using /home/kana/linux_debug/linux as source for kernel
+  CALL    /home/kana/linux_debug/linux/scripts/checksyscalls.sh
+  CHK     include/generated/compile.h
+  GZIP    kernel/config_data.gz
+  CC      drivers/soc/bcm/rpi_debugfs.o
+  AR      drivers/soc/bcm/built-in.a
+  AR      drivers/soc/built-in.a
+  AR      drivers/built-in.a
+  GEN     .version
+  CHK     include/generated/compile.h
+  UPD     include/generated/compile.h
+  CC      init/version.o
+  AR      init/built-in.a
+  AR      built-in.a
+  LD      vmlinux.o
+  MODPOST vmlinux.o
+  KSYM    .tmp_kallsyms1.o
+  KSYM    .tmp_kallsyms2.o
+  LD      vmlinux
+  SORTEX  vmlinux
+  SYSMAP  System.map
+  Building modules, stage 2.
+  OBJCOPY arch/arm/boot/Image
+  Kernel: arch/arm/boot/Image is ready
+  GZIP    arch/arm/boot/compressed/piggy_data
+  AS      arch/arm/boot/compressed/piggy.o
+  LD      arch/arm/boot/compressed/vmlinux
+  OBJCOPY arch/arm/boot/zImage
+  Kernel: arch/arm/boot/zImage is ready
+  MODPOST 1607 modules
+make[1]: Leaving directory '/home/kana/linux_debug/out'

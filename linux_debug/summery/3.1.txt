@@ -1,0 +1,22 @@
+what is the shell script??
+
+if error occur, kernel print error massege,
+ so first check it where msg is printed and why
+ second add debugging code and check kernel log 
+
+
+if you want to know about "how function-F is work", 
+then you change the kernel code for debug.
+
+though git commit ,and git log, diff >> check what's different
+
+after change code, build, install, reboot,
+through ftrace(shell script) > trace the function-F set
+execute code > ftrace log check
+
+through ftrace log, you can know about.
+How function-F is called and which process called F (call stack)
+which interrupt is executed by F (handler name as well)
+
+you will know about >>>>> how F is called, name of process call F, data structure
+through <ftrace log>

@@ -1,0 +1,36 @@
+
+task discriptor is struct that include information about process state[asigned all process]
+
+so when you want to analysis {Func} then, add to function [printk] and build, install
+and check the kernel log >> you can know about process name, {Func} name, line, what func call {Func}
+
+too many use printk at little time cause system error[lockup, kernel panic]
+because printk is uses lot of cost [dump_stack is also]
+
+but we want to know about kernel log every cases >> ftrace can be great replaycement
+------------------------------------------------------------------------------------------
+ftrace can trace kernel detailed operation
+when set the function filter, print the call func and call stack [no code change]
+which and when process is call function
+low cost
+
+through ftrace_set.sh > execution
+through get_ftrace.sh > extract ftrace log               [details about log, shell script >> book p100]
+
+through each ftrace event in kernel subsystem >> >> can trace kernel detailed operation
+understand the output ftrace message + analysis kernel code will be good
+
+---------------------------------------------------------------------------------------------
+in 3.5 >> i don't know about what book saying... > need to study trace32
+------------------------------------------------------------------------------------------
+in 3.6 >> i don't know how rpi_debugfs.c code work. trace the source code flow
+
+anyway when reboot linux, at first the raspbian_debug_state value is 4096
+if you change source code to if(state == V)~~, this code is not working,
+that means boot sequence is high possible to act
+when boot finish, you can change the state value to V, and test
+
+-------------------------------------------------------------------------------------
+when you work for project, you have to know about datastructure, function call flow when normal action.
+because for find the problem
+
