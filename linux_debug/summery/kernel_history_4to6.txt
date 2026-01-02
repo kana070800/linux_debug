@@ -1,0 +1,952 @@
+commit f9fbb1a6e3ac57d1ce43dd3d16e7ad5f8d3bcf50
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Thu Jan 1 17:37:43 2026 +0900
+
+    6.7.3
+
+diff --git a/kernel/softirq.c b/kernel/softirq.c
+index 6f584861d..652fa0b5b 100644
+--- a/kernel/softirq.c
++++ b/kernel/softirq.c
+@@ -454,6 +454,7 @@ void __raise_softirq_irqoff(unsigned int nr)
+ void open_softirq(int nr, void (*action)(struct softirq_action *))
+ {
+ 	softirq_vec[nr].action = action;
++	dump_stack(); //add at 2025-1-1-------in 6.7.3
+ }
+ 
+ /*
+
+commit ee65b104764d2b21e9ee4c24a0a7bf71582fdd8f
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Wed Dec 31 15:05:01 2025 +0900
+
+    6.5.2 revise
+
+diff --git a/drivers/mailbox/bcm2835-mailbox.c b/drivers/mailbox/bcm2835-mailbox.c
+index a325f7dc9..d53a3f5a4 100644
+--- a/drivers/mailbox/bcm2835-mailbox.c
++++ b/drivers/mailbox/bcm2835-mailbox.c
+@@ -175,7 +175,7 @@ static int bcm2835_mbox_probe(struct platform_device *pdev)
+ 	//ret = devm_request_irq(dev, platform_get_irq(pdev, 0),
+ 	//		       bcm2835_mbox_irq, 0, dev_name(dev), mbox);
+ 	ret = devm_request_threaded_irq(dev, platform_get_irq(pdev, 0),
+-			bcm2835_mbox_irq, bcm_mbox_threaded_irq, 0, dev_name(dev), mbox);
++			bcm2835_mbox_irq, bcm2835_mbox_threaded_irq, 0, dev_name(dev), mbox);
+ 	
+ 	if (ret) {
+ 		dev_err(dev, "Failed to register a mailbox IRQ handler: %d\n",
+
+commit debb9eb5836352a1adeab1ea9fd53c73fdf9b2b8
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Wed Dec 31 15:02:09 2025 +0900
+
+    6.5.2
+
+diff --git a/drivers/mailbox/bcm2835-mailbox.c b/drivers/mailbox/bcm2835-mailbox.c
+index a03aeed2e..a325f7dc9 100644
+--- a/drivers/mailbox/bcm2835-mailbox.c
++++ b/drivers/mailbox/bcm2835-mailbox.c
+@@ -72,6 +72,23 @@ static struct bcm2835_mbox *bcm2835_link_mbox(struct mbox_chan *link)
+ 	return container_of(link->mbox, struct bcm2835_mbox, controller);
+ }
+ 
++static irqreturn_t bcm2835_mbox_threaded_irq(int irq, void *dev_id)
++{
++	void *stack;
++	struct thread_info *current_thread;
++
++	stack = current->stack;
++	current_thread = (struct thread_info*)stack;
++
++	trace_printk("irq=%d, process: %s \n", irq, current->comm);
++	trace_printk("[+] in_interrupt: 0x%08x, preempt_count = 0x%08x, stack=0x%08lx \n",
++			(unsigned int)in_interrupt(), (unsigned int)current_thread->preempt_count,
++			(long unsigned int)stack);
++	dump_stack();
++
++	return IRQ_HANDLED;
++}
++
+ static irqreturn_t bcm2835_mbox_irq(int irq, void *dev_id)
+ {
+ 	struct bcm2835_mbox *mbox = dev_id;
+@@ -83,7 +100,8 @@ static irqreturn_t bcm2835_mbox_irq(int irq, void *dev_id)
+ 		dev_dbg(dev, "Reply 0x%08X\n", msg);
+ 		mbox_chan_received_data(link, &msg);
+ 	}
+-	return IRQ_HANDLED;
++	//return IRQ_HANDLED;
++	return IRQ_WAKE_THREAD;
+ }
+ 
+ static int bcm2835_send_data(struct mbox_chan *link, void *data)
+@@ -154,8 +172,11 @@ static int bcm2835_mbox_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 	spin_lock_init(&mbox->lock);
+ 
+-	ret = devm_request_irq(dev, platform_get_irq(pdev, 0),
+-			       bcm2835_mbox_irq, 0, dev_name(dev), mbox);
++	//ret = devm_request_irq(dev, platform_get_irq(pdev, 0),
++	//		       bcm2835_mbox_irq, 0, dev_name(dev), mbox);
++	ret = devm_request_threaded_irq(dev, platform_get_irq(pdev, 0),
++			bcm2835_mbox_irq, bcm_mbox_threaded_irq, 0, dev_name(dev), mbox);
++	
+ 	if (ret) {
+ 		dev_err(dev, "Failed to register a mailbox IRQ handler: %d\n",
+ 			ret);
+
+commit a8a9807f37944a6d1820ed64b71dc92e0dc1e55c
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Tue Dec 30 15:06:56 2025 +0900
+
+    6.3.2 revise2
+
+diff --git a/kernel/kthread.c b/kernel/kthread.c
+index 091e1a658..7d1148252 100644
+--- a/kernel/kthread.c
++++ b/kernel/kthread.c
+@@ -292,7 +292,7 @@ struct task_struct *__kthread_create_on_node(int (*threadfn)(void *data),
+ 						     GFP_KERNEL);
+ //changed at 2025-12-30-------in 6.3.2--------------------------------
+ 	int irq_thread_enable = !strncmp(namefmt, "irq", 3);
+-	char *process_name = &namefmt[0];
++	const char *process_name = &namefmt[0];
+ //-------------------------------------------------------------------
+ 	if (!create)
+ 		return ERR_PTR(-ENOMEM);
+
+commit 6fa7a7176ddee9675b16ef20eebc804b277ba9e0
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Tue Dec 30 15:01:37 2025 +0900
+
+    6.3.2 revise
+
+diff --git a/kernel/kthread.c b/kernel/kthread.c
+index 1e4b19902..091e1a658 100644
+--- a/kernel/kthread.c
++++ b/kernel/kthread.c
+@@ -291,7 +291,7 @@ struct task_struct *__kthread_create_on_node(int (*threadfn)(void *data),
+ 	struct kthread_create_info *create = kmalloc(sizeof(*create),
+ 						     GFP_KERNEL);
+ //changed at 2025-12-30-------in 6.3.2--------------------------------
+-	int irq_thread_enable = !strcmp(namefmt, "irq", 3);
++	int irq_thread_enable = !strncmp(namefmt, "irq", 3);
+ 	char *process_name = &namefmt[0];
+ //-------------------------------------------------------------------
+ 	if (!create)
+
+commit af7af400d1ce897e54364c0dd774484ff516d549
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Tue Dec 30 14:58:59 2025 +0900
+
+    6.3.2
+
+diff --git a/kernel/kthread.c b/kernel/kthread.c
+index 087d18d77..1e4b19902 100644
+--- a/kernel/kthread.c
++++ b/kernel/kthread.c
+@@ -290,14 +290,25 @@ struct task_struct *__kthread_create_on_node(int (*threadfn)(void *data),
+ 	struct task_struct *task;
+ 	struct kthread_create_info *create = kmalloc(sizeof(*create),
+ 						     GFP_KERNEL);
+-
++//changed at 2025-12-30-------in 6.3.2--------------------------------
++	int irq_thread_enable = !strcmp(namefmt, "irq", 3);
++	char *process_name = &namefmt[0];
++//-------------------------------------------------------------------
+ 	if (!create)
+ 		return ERR_PTR(-ENOMEM);
+ 	create->threadfn = threadfn;
+ 	create->data = data;
+ 	create->node = node;
+ 	create->done = &done;
+-
++//----------same ------------------------------------------------
++	if (process_name)
++		printk("[+] process_name: %s caller:(%pS)\n", process_name, (void*)__builtin_return_address(0));
++	if (irq_thread_enable){
++		void *irq_threadfn = (void *)threadfn;
++		printk("[+] irq_thread handler: %pS caller:(%pS) \n", irq_threadfn, (void*)__builtin_return_address(0));
++		dump_stack();
++	}
++//-----------------------------------------------------------------
+ 	spin_lock(&kthread_create_lock);
+ 	list_add_tail(&create->list, &kthread_create_list);
+ 	spin_unlock(&kthread_create_lock);
+
+commit e42656e21e532522a21b7adbc743bc8911fc1849
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Mon Dec 29 15:41:16 2025 +0900
+
+    init state
+
+diff --git a/drivers/soc/bcm/Makefile b/drivers/soc/bcm/Makefile
+index 366ce3e92..c81df4b24 100644
+--- a/drivers/soc/bcm/Makefile
++++ b/drivers/soc/bcm/Makefile
+@@ -1,4 +1,3 @@
+-obj-y += rpi_debugfs.o 
+ obj-$(CONFIG_BCM2835_POWER)	+= bcm2835-power.o
+ obj-$(CONFIG_RASPBERRYPI_POWER)	+= raspberrypi-power.o
+ obj-$(CONFIG_SOC_BRCMSTB)	+= brcmstb/
+diff --git a/drivers/usb/host/dwc_otg/dwc_otg_driver.c b/drivers/usb/host/dwc_otg/dwc_otg_driver.c
+index 783cbd326..6bfd35c57 100644
+--- a/drivers/usb/host/dwc_otg/dwc_otg_driver.c
++++ b/drivers/usb/host/dwc_otg/dwc_otg_driver.c
+@@ -664,35 +664,7 @@ static int dwc_otg_driver_remove(        struct platform_device *_dev )
+ #endif
+         return REM_RETVAL(0);
+ }
+-//add at 2025-12-27---5.4.2-----------------------------
+-static void interrupt_debug_irq_desc(int irq_num)
+-{
+-	struct irqaction *action;
+-	struct irq_desc *desc;
+-
+-	desc = irq_to_desc(irq_num);
+-
+-	if (!desc) {
+-		pr_err("invalid desc at %s line: %d\n", __func__, __LINE__);
+-		return;
+-	}
+-	action = desc->action;
+-	if (!action){
+-		pr_err("invalid action at %s line: %d\n", __func__, __LINE__);
+-		return;
+-	}
+ 
+-	printk("[+] irq_desc debug start \n");
+-
+-	printk("irq num: %d name: %8s \n", action->irq, action->name);
+-	printk("dev_id: 0x%x \n", (unsigned int)action->dev_id);
+-
+-	if (action->handler){
+-		printk("interrupt handler: %pF \n", action->handler);
+-	}
+-	printk("[-] irq_desc debug end \n");
+-}
+-//-----------------------------------------------------
+ /**
+  * This function is called when an lm_device is bound to a
+  * dwc_otg_driver. It creates the driver components required to
+@@ -942,9 +914,6 @@ static int dwc_otg_driver_probe(
+ 	retval = request_irq(devirq, dwc_otg_common_irq,
+                              IRQF_SHARED,
+                              "dwc_otg", dwc_otg_device);
+-	//at 2025-12-27---5.4.2------------------------
+-	interrupt_debug_irq_desc(devirq);
+-	//------
+ 	if (retval) {
+ 		DWC_ERROR("request of irq%d failed\n", devirq);
+ 		retval = -EBUSY;
+diff --git a/kernel/irq/handle.c b/kernel/irq/handle.c
+index e45e7e5e5..38554bc35 100644
+--- a/kernel/irq/handle.c
++++ b/kernel/irq/handle.c
+@@ -144,11 +144,8 @@ irqreturn_t __handle_irq_event_percpu(struct irq_desc *desc, unsigned int *flags
+ 
+ 	for_each_action_of_desc(desc, action) {
+ 		irqreturn_t res;
+-// changed at 2025-12-18--------------------------------------------
+-		void *irq_handler = (void*)action->handler; //---
+ 
+ 		trace_irq_handler_entry(irq, action);
+-		trace_printk("[+] irq:[%d] handler: %pS caller:(%pS) \n", irq, irq_handler, (void *)__builtin_return_address(0));
+ 		res = action->handler(irq, action->dev_id);
+ 		trace_irq_handler_exit(irq, action, res);
+ 
+diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
+index 320714144..efcb54ee0 100644
+--- a/kernel/irq/manage.c
++++ b/kernel/irq/manage.c
+@@ -1880,13 +1880,6 @@ int request_threaded_irq(unsigned int irq, irq_handler_t handler,
+ 	action->flags = irqflags;
+ 	action->name = devname;
+ 	action->dev_id = dev_id;
+-//changed at 2025-12-27--------5.4.2-------------------
+-	if (irq == 56 || irq == 86){
+-		printk("[+][irq_debug] irq_num: %d, func: %s, line: %d, caller: %pS \n",
+-				irq, __func__, __LINE__, (void *)__builtin_return_address(0));
+-		dump_stack();
+-	}
+-//----------------------------------------------------
+ 
+ 	retval = irq_chip_pm_get(&desc->irq_data);
+ 	if (retval < 0) {
+diff --git a/kernel/irq/proc.c b/kernel/irq/proc.c
+index 43776cf66..e8c655b7a 100644
+--- a/kernel/irq/proc.c
++++ b/kernel/irq/proc.c
+@@ -471,20 +471,6 @@ int __weak arch_show_interrupts(struct seq_file *p, int prec)
+ # define ACTUAL_NR_IRQS nr_irqs
+ #endif
+ 
+-void rpi_get_interrupt_info(struct irqaction *action_p)
+-{	
+-	unsigned int irq_num = action_p->irq;
+-	void *irq_handler = NULL;
+-
+-	if (action_p->handler){
+-		irq_handler = (void*)action_p->handler;
+-	}
+-
+-	if (irq_handler){
+-		trace_printk("[%s] %d: %s, irq_handler: %pS \n", current->comm, irq_num, action_p->name, irq_handler);
+-	}
+-}
+-
+ int show_interrupts(struct seq_file *p, void *v)
+ {
+ 	static int prec;
+@@ -550,10 +536,6 @@ int show_interrupts(struct seq_file *p, void *v)
+ 		seq_printf(p, "-%-8s", desc->name);
+ 
+ 	action = desc->action;
+-
+-	if (action)
+-		rpi_get_interrupt_info(action);
+-
+ 	if (action) {
+ 		seq_printf(p, "  %s", action->name);
+ 		while ((action = action->next) != NULL)
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 5a6573204..2befd2c4c 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -1653,11 +1653,7 @@ static void ttwu_do_wakeup(struct rq *rq, struct task_struct *p, int wake_flags,
+ 	check_preempt_curr(rq, p, wake_flags);
+ 	p->state = TASK_RUNNING;
+ 	trace_sched_wakeup(p);
+-/*
+-	if (!strcmp(p->comm, "kthreadd")){
+-		printk("[+][%s] wakeup kthreadd process \n", current->comm);
+-		dump_stack();
+-	}*/
++
+ #ifdef CONFIG_SMP
+ 	if (p->sched_class->task_woken) {
+ 		/*
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index 4e7a8fe41..eef77c82d 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -2536,10 +2536,7 @@ static void insert_wq_barrier(struct pool_workqueue *pwq,
+ {
+ 	struct list_head *head;
+ 	unsigned int linked = 0;
+-/*
+-	printk("[+] process: %s \n", current->comm);
+-	printk("[+][debug] message [F: %s, L:%d]: caller:(%pS)\n",
+-		       	__func__,__LINE__,(void*)__builtin_return_address(0));*/
++
+ 	/*
+ 	 * debugobject calls are safe here even with pool->lock locked
+ 	 * as we know for sure that this will not trigger any of the
+
+commit cbde1a47db2ed4db069a1199d819061c8fc77b70
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Sun Dec 28 20:06:46 2025 +0900
+
+    ftrace handler add
+
+diff --git a/kernel/irq/handle.c b/kernel/irq/handle.c
+index 38554bc35..e45e7e5e5 100644
+--- a/kernel/irq/handle.c
++++ b/kernel/irq/handle.c
+@@ -144,8 +144,11 @@ irqreturn_t __handle_irq_event_percpu(struct irq_desc *desc, unsigned int *flags
+ 
+ 	for_each_action_of_desc(desc, action) {
+ 		irqreturn_t res;
++// changed at 2025-12-18--------------------------------------------
++		void *irq_handler = (void*)action->handler; //---
+ 
+ 		trace_irq_handler_entry(irq, action);
++		trace_printk("[+] irq:[%d] handler: %pS caller:(%pS) \n", irq, irq_handler, (void *)__builtin_return_address(0));
+ 		res = action->handler(irq, action->dev_id);
+ 		trace_irq_handler_exit(irq, action, res);
+ 
+
+commit 7db5100d8386d213dc1e11046fa8671616a78bda
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Sat Dec 27 15:36:32 2025 +0900
+
+    5.4.2__2
+
+diff --git a/drivers/usb/host/dwc_otg/dwc_otg_driver.c b/drivers/usb/host/dwc_otg/dwc_otg_driver.c
+index 6bfd35c57..783cbd326 100644
+--- a/drivers/usb/host/dwc_otg/dwc_otg_driver.c
++++ b/drivers/usb/host/dwc_otg/dwc_otg_driver.c
+@@ -664,7 +664,35 @@ static int dwc_otg_driver_remove(        struct platform_device *_dev )
+ #endif
+         return REM_RETVAL(0);
+ }
++//add at 2025-12-27---5.4.2-----------------------------
++static void interrupt_debug_irq_desc(int irq_num)
++{
++	struct irqaction *action;
++	struct irq_desc *desc;
++
++	desc = irq_to_desc(irq_num);
++
++	if (!desc) {
++		pr_err("invalid desc at %s line: %d\n", __func__, __LINE__);
++		return;
++	}
++	action = desc->action;
++	if (!action){
++		pr_err("invalid action at %s line: %d\n", __func__, __LINE__);
++		return;
++	}
+ 
++	printk("[+] irq_desc debug start \n");
++
++	printk("irq num: %d name: %8s \n", action->irq, action->name);
++	printk("dev_id: 0x%x \n", (unsigned int)action->dev_id);
++
++	if (action->handler){
++		printk("interrupt handler: %pF \n", action->handler);
++	}
++	printk("[-] irq_desc debug end \n");
++}
++//-----------------------------------------------------
+ /**
+  * This function is called when an lm_device is bound to a
+  * dwc_otg_driver. It creates the driver components required to
+@@ -914,6 +942,9 @@ static int dwc_otg_driver_probe(
+ 	retval = request_irq(devirq, dwc_otg_common_irq,
+                              IRQF_SHARED,
+                              "dwc_otg", dwc_otg_device);
++	//at 2025-12-27---5.4.2------------------------
++	interrupt_debug_irq_desc(devirq);
++	//------
+ 	if (retval) {
+ 		DWC_ERROR("request of irq%d failed\n", devirq);
+ 		retval = -EBUSY;
+
+commit fbf7be604e133af06dae219e2c78efd23d90d0f4
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Sat Dec 27 14:56:08 2025 +0900
+
+    5.4.2
+
+diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
+index efcb54ee0..320714144 100644
+--- a/kernel/irq/manage.c
++++ b/kernel/irq/manage.c
+@@ -1880,6 +1880,13 @@ int request_threaded_irq(unsigned int irq, irq_handler_t handler,
+ 	action->flags = irqflags;
+ 	action->name = devname;
+ 	action->dev_id = dev_id;
++//changed at 2025-12-27--------5.4.2-------------------
++	if (irq == 56 || irq == 86){
++		printk("[+][irq_debug] irq_num: %d, func: %s, line: %d, caller: %pS \n",
++				irq, __func__, __LINE__, (void *)__builtin_return_address(0));
++		dump_stack();
++	}
++//----------------------------------------------------
+ 
+ 	retval = irq_chip_pm_get(&desc->irq_data);
+ 	if (retval < 0) {
+
+commit cc7dc6235b4718b118982bfa19209ee8407ff52e
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Fri Dec 26 13:39:42 2025 +0900
+
+    re
+
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index 2cb6defdd..4e7a8fe41 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -2536,10 +2536,10 @@ static void insert_wq_barrier(struct pool_workqueue *pwq,
+ {
+ 	struct list_head *head;
+ 	unsigned int linked = 0;
+-
++/*
+ 	printk("[+] process: %s \n", current->comm);
+ 	printk("[+][debug] message [F: %s, L:%d]: caller:(%pS)\n",
+-		       	__func__,__LINE__,(void*)__builtin_return_address(0));
++		       	__func__,__LINE__,(void*)__builtin_return_address(0));*/
+ 	/*
+ 	 * debugobject calls are safe here even with pool->lock locked
+ 	 * as we know for sure that this will not trigger any of the
+
+commit 066708882407bd22a25f11c444eb1a2e1715485a
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Fri Dec 26 13:27:28 2025 +0900
+
+    revise
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 8b9ea9701..5a6573204 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -1653,11 +1653,11 @@ static void ttwu_do_wakeup(struct rq *rq, struct task_struct *p, int wake_flags,
+ 	check_preempt_curr(rq, p, wake_flags);
+ 	p->state = TASK_RUNNING;
+ 	trace_sched_wakeup(p);
+-	
++/*
+ 	if (!strcmp(p->comm, "kthreadd")){
+ 		printk("[+][%s] wakeup kthreadd process \n", current->comm);
+ 		dump_stack();
+-	}
++	}*/
+ #ifdef CONFIG_SMP
+ 	if (p->sched_class->task_woken) {
+ 		/*
+
+commit d93e1004ec6877f7219d5a6457007c484873478e
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Fri Dec 26 13:17:24 2025 +0900
+
+    Revert "5.2.4"
+    
+    This reverts commit 7e7c83ac791ccb286cf3372edb64d6d8135aaab9.
+
+diff --git a/drivers/mmc/host/bcm2835-sdhost.c b/drivers/mmc/host/bcm2835-sdhost.c
+index d190d767f..3716a80a8 100644
+--- a/drivers/mmc/host/bcm2835-sdhost.c
++++ b/drivers/mmc/host/bcm2835-sdhost.c
+@@ -1483,15 +1483,7 @@ static irqreturn_t bcm2835_sdhost_irq(int irq, void *dev_id)
+ 	irqreturn_t result = IRQ_NONE;
+ 	struct bcm2835_host *host = dev_id;
+ 	u32 intmask;
+-//changed at 2025-12-26-----------------------------------
+-	void *stack;
+-	struct thread_info *current_thread;
+ 
+-	stack = current->stack;
+-	current_thread = (struct thread_info*)stack;
+-
+-	printk("[+] in_interrupt: 0x%08x, preempt_count = 0x%08x, stack=0x%08lx \n", (unsigned)in_interrupt(), (unsigned int)current_thread->preempt_count, (long unsigned int)stack);
+-//-----------------------------------------------------
+ 	spin_lock(&host->lock);
+ 
+ 	intmask = bcm2835_sdhost_read(host, SDHSTS);
+
+commit a5ca2d759a863afa3e8d3b5cb5147a46b46e0c45
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Fri Dec 26 13:17:12 2025 +0900
+
+    Revert "Revert "4.8.1""
+    
+    This reverts commit b0d8fa9428c8a89a20e765497063d73f5a889995.
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 2befd2c4c..8b9ea9701 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -1653,7 +1653,11 @@ static void ttwu_do_wakeup(struct rq *rq, struct task_struct *p, int wake_flags,
+ 	check_preempt_curr(rq, p, wake_flags);
+ 	p->state = TASK_RUNNING;
+ 	trace_sched_wakeup(p);
+-
++	
++	if (!strcmp(p->comm, "kthreadd")){
++		printk("[+][%s] wakeup kthreadd process \n", current->comm);
++		dump_stack();
++	}
+ #ifdef CONFIG_SMP
+ 	if (p->sched_class->task_woken) {
+ 		/*
+
+commit 7e7c83ac791ccb286cf3372edb64d6d8135aaab9
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Fri Dec 26 13:06:33 2025 +0900
+
+    5.2.4
+
+diff --git a/drivers/mmc/host/bcm2835-sdhost.c b/drivers/mmc/host/bcm2835-sdhost.c
+index 3716a80a8..d190d767f 100644
+--- a/drivers/mmc/host/bcm2835-sdhost.c
++++ b/drivers/mmc/host/bcm2835-sdhost.c
+@@ -1483,7 +1483,15 @@ static irqreturn_t bcm2835_sdhost_irq(int irq, void *dev_id)
+ 	irqreturn_t result = IRQ_NONE;
+ 	struct bcm2835_host *host = dev_id;
+ 	u32 intmask;
++//changed at 2025-12-26-----------------------------------
++	void *stack;
++	struct thread_info *current_thread;
+ 
++	stack = current->stack;
++	current_thread = (struct thread_info*)stack;
++
++	printk("[+] in_interrupt: 0x%08x, preempt_count = 0x%08x, stack=0x%08lx \n", (unsigned)in_interrupt(), (unsigned int)current_thread->preempt_count, (long unsigned int)stack);
++//-----------------------------------------------------
+ 	spin_lock(&host->lock);
+ 
+ 	intmask = bcm2835_sdhost_read(host, SDHSTS);
+
+commit b0d8fa9428c8a89a20e765497063d73f5a889995
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Mon Dec 15 21:54:19 2025 +0900
+
+    Revert "4.8.1"
+    
+    This reverts commit 854f87ae5fd7c6a595b5a599e1fbf51bd971a4ed.
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 8b9ea9701..2befd2c4c 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -1653,11 +1653,7 @@ static void ttwu_do_wakeup(struct rq *rq, struct task_struct *p, int wake_flags,
+ 	check_preempt_curr(rq, p, wake_flags);
+ 	p->state = TASK_RUNNING;
+ 	trace_sched_wakeup(p);
+-	
+-	if (!strcmp(p->comm, "kthreadd")){
+-		printk("[+][%s] wakeup kthreadd process \n", current->comm);
+-		dump_stack();
+-	}
++
+ #ifdef CONFIG_SMP
+ 	if (p->sched_class->task_woken) {
+ 		/*
+
+commit 854f87ae5fd7c6a595b5a599e1fbf51bd971a4ed
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Mon Dec 15 19:38:32 2025 +0900
+
+    4.8.1
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 2befd2c4c..8b9ea9701 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -1653,7 +1653,11 @@ static void ttwu_do_wakeup(struct rq *rq, struct task_struct *p, int wake_flags,
+ 	check_preempt_curr(rq, p, wake_flags);
+ 	p->state = TASK_RUNNING;
+ 	trace_sched_wakeup(p);
+-
++	
++	if (!strcmp(p->comm, "kthreadd")){
++		printk("[+][%s] wakeup kthreadd process \n", current->comm);
++		dump_stack();
++	}
+ #ifdef CONFIG_SMP
+ 	if (p->sched_class->task_woken) {
+ 		/*
+
+commit dd409379eef7b488ce6009cc0d82b54051f7f698
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Fri Dec 5 17:07:51 2025 +0900
+
+    debugfs revise
+
+diff --git a/FETCH_HEAD b/FETCH_HEAD
+new file mode 100644
+index 000000000..e69de29bb
+diff --git a/drivers/soc/bcm/rpi_debugfs.c b/drivers/soc/bcm/rpi_debugfs.c
+index 171252733..c69a252fa 100644
+--- a/drivers/soc/bcm/rpi_debugfs.c
++++ b/drivers/soc/bcm/rpi_debugfs.c
+@@ -1,3 +1,6 @@
++#include <linux/mm.h>
++#include <linux/mm_types.h>
++
+ #include <linux/module.h>
+ #include <linux/moduleparam.h>
+ #include <linux/platform_device.h>
+diff --git a/test.txt b/test.txt
+deleted file mode 100644
+index 5002b74e8..000000000
+--- a/test.txt
++++ /dev/null
+@@ -1 +0,0 @@
+-aaa:
+
+commit de0b3aed872b43c6d726bde04777b1711ab37fc7
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Fri Dec 5 16:53:30 2025 +0900
+
+    debugfs
+
+diff --git a/drivers/soc/bcm/Makefile b/drivers/soc/bcm/Makefile
+index c81df4b24..366ce3e92 100644
+--- a/drivers/soc/bcm/Makefile
++++ b/drivers/soc/bcm/Makefile
+@@ -1,3 +1,4 @@
++obj-y += rpi_debugfs.o 
+ obj-$(CONFIG_BCM2835_POWER)	+= bcm2835-power.o
+ obj-$(CONFIG_RASPBERRYPI_POWER)	+= raspberrypi-power.o
+ obj-$(CONFIG_SOC_BRCMSTB)	+= brcmstb/
+diff --git a/drivers/soc/bcm/rpi_debugfs.c b/drivers/soc/bcm/rpi_debugfs.c
+new file mode 100644
+index 000000000..171252733
+--- /dev/null
++++ b/drivers/soc/bcm/rpi_debugfs.c
+@@ -0,0 +1,65 @@
++#include <linux/module.h>
++#include <linux/moduleparam.h>
++#include <linux/platform_device.h>
++#include <linux/io.h>
++#include <linux/init.h>
++#include <linux/slab.h>
++#include <linux/of.h>
++#include <linux/of_address.h>
++#include <linux/cpu.h>
++#include <linux/delay.h>
++#include <asm/setup.h>
++#include <linux/input.h>
++#include <linux/debugfs.h>
++#include <linux/timer.h>
++#include <linux/workqueue.h>
++#include <linux/mutex.h>
++#include <linux/slub_def.h>
++#include <linux/uaccess.h>
++#include <asm/memory.h>
++
++uint32_t raspbian_debug_state = 0x1000;
++static struct dentry *rpi_kernel_debug_debugfs_root;
++
++static int rpi_kernel_debug_stat_get(void *data, u64 *val)
++{
++	printk("===[%s][L:%d][val:%d]===\n", __func__, __LINE__, raspbian_debug_state);
++	*val = raspbian_debug_state;
++	return 0;
++}
++
++static int rpi_kernel_debug_stat_set(void *data, u64 val)
++{
++	raspbian_debug_state = (uint32_t)val;
++	printk("[rpi][%s][L:%d], raspbian_debug_state[%lu],value[%lu]===\n",
++			__func__, __LINE__, (long unsigned int)raspbian_debug_state, (long unsigned int)val);
++	return 0;
++}
++
++DEFINE_SIMPLE_ATTRIBUTE(rpi_kernel_debug_stat_fops, rpi_kernel_debug_stat_get, rpi_kernel_debug_stat_set, "%llu\n");
++
++static int rpi_kernel_debug_debugfs_driver_probe(struct platform_device *pdev)
++{
++	printk("===[%s][L:%d]===\n", __func__, __LINE__);
++	return 0;
++}
++
++static struct platform_driver rpi_kernel_debug_debugfs_driver = {
++	.probe = rpi_kernel_debug_debugfs_driver_probe,
++	.driver = {.owner = THIS_MODULE, .name = "rpi_debug"},
++};
++
++static int __init rpi_kernel_debug_debugfs_init(void)
++{
++	printk("===[%s][L:%d]===\n", __func__, __LINE__);
++	rpi_kernel_debug_debugfs_root = debugfs_create_dir("rpi_debug",NULL);
++	debugfs_create_file("val", S_IRUGO, rpi_kernel_debug_debugfs_root, NULL, &rpi_kernel_debug_stat_fops);
++	
++	return platform_driver_register(&rpi_kernel_debug_debugfs_driver);
++}
++
++late_initcall(rpi_kernel_debug_debugfs_init);
++
++MODULE_DESCRIPTION("rapberrypi debug interface driver");
++MODULE_AUTHOR("Austin Kim <austindh.kim@gmail.com>");
++MODULE_LICENSE("GPL");
+
+commit e250f9442a8c0cb1d05e286935bf26872407c8a2
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Thu Dec 4 16:10:26 2025 +0900
+
+    Revert "dump_stack"
+    
+    This reverts commit 2e4d296850744bcca524a2d373d3535969d6fbad.
+
+diff --git a/kernel/fork.c b/kernel/fork.c
+index e03252fd5..1a2d18e98 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -100,7 +100,7 @@
+ #include <asm/tlbflush.h>
+ 
+ #include <trace/events/sched.h>
+-#include <linux/kernel.h>
++
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/task.h>
+ 
+@@ -2173,8 +2173,6 @@ struct task_struct *fork_idle(int cpu)
+  * It copies the process, and if successful kick-starts
+  * it and waits for it to finish using the VM if required.
+  */
+-
+-static int debug_kernel_thread = 1;
+ long _do_fork(unsigned long clone_flags,
+ 	      unsigned long stack_start,
+ 	      unsigned long stack_size,
+@@ -2210,10 +2208,6 @@ long _do_fork(unsigned long clone_flags,
+ 			 child_tidptr, NULL, trace, tls, NUMA_NO_NODE);
+ 	add_latent_entropy();
+ 
+-	if (debug_kernel_thread){
+-		printk("[+] [%s] process n", current->comm);
+-		dump_stack();
+-	}
+ 	if (IS_ERR(p))
+ 		return PTR_ERR(p);
+ 
+
+commit d0aa67e5fe60e5ad64d4737c067aedc6963082d8
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Thu Dec 4 16:10:19 2025 +0900
+
+    Revert "Revert "printk""
+    
+    This reverts commit 734027723eb6a09bf972e03e11d0141066305756.
+
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index eef77c82d..2cb6defdd 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -2537,6 +2537,9 @@ static void insert_wq_barrier(struct pool_workqueue *pwq,
+ 	struct list_head *head;
+ 	unsigned int linked = 0;
+ 
++	printk("[+] process: %s \n", current->comm);
++	printk("[+][debug] message [F: %s, L:%d]: caller:(%pS)\n",
++		       	__func__,__LINE__,(void*)__builtin_return_address(0));
+ 	/*
+ 	 * debugobject calls are safe here even with pool->lock locked
+ 	 * as we know for sure that this will not trigger any of the
+
+commit 2e4d296850744bcca524a2d373d3535969d6fbad
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Thu Dec 4 15:39:43 2025 +0900
+
+    dump_stack
+
+diff --git a/kernel/fork.c b/kernel/fork.c
+index 1a2d18e98..e03252fd5 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -100,7 +100,7 @@
+ #include <asm/tlbflush.h>
+ 
+ #include <trace/events/sched.h>
+-
++#include <linux/kernel.h>
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/task.h>
+ 
+@@ -2173,6 +2173,8 @@ struct task_struct *fork_idle(int cpu)
+  * It copies the process, and if successful kick-starts
+  * it and waits for it to finish using the VM if required.
+  */
++
++static int debug_kernel_thread = 1;
+ long _do_fork(unsigned long clone_flags,
+ 	      unsigned long stack_start,
+ 	      unsigned long stack_size,
+@@ -2208,6 +2210,10 @@ long _do_fork(unsigned long clone_flags,
+ 			 child_tidptr, NULL, trace, tls, NUMA_NO_NODE);
+ 	add_latent_entropy();
+ 
++	if (debug_kernel_thread){
++		printk("[+] [%s] process n", current->comm);
++		dump_stack();
++	}
+ 	if (IS_ERR(p))
+ 		return PTR_ERR(p);
+ 
+
+commit 734027723eb6a09bf972e03e11d0141066305756
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Thu Dec 4 15:18:15 2025 +0900
+
+    Revert "printk"
+    
+    This reverts commit 88c84f07d95490f7e8c8a544428d26c6634e4e3e.
+
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index 2cb6defdd..eef77c82d 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -2537,9 +2537,6 @@ static void insert_wq_barrier(struct pool_workqueue *pwq,
+ 	struct list_head *head;
+ 	unsigned int linked = 0;
+ 
+-	printk("[+] process: %s \n", current->comm);
+-	printk("[+][debug] message [F: %s, L:%d]: caller:(%pS)\n",
+-		       	__func__,__LINE__,(void*)__builtin_return_address(0));
+ 	/*
+ 	 * debugobject calls are safe here even with pool->lock locked
+ 	 * as we know for sure that this will not trigger any of the
+
+commit 88c84f07d95490f7e8c8a544428d26c6634e4e3e
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Thu Dec 4 14:47:28 2025 +0900
+
+    printk
+
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index eef77c82d..2cb6defdd 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -2537,6 +2537,9 @@ static void insert_wq_barrier(struct pool_workqueue *pwq,
+ 	struct list_head *head;
+ 	unsigned int linked = 0;
+ 
++	printk("[+] process: %s \n", current->comm);
++	printk("[+][debug] message [F: %s, L:%d]: caller:(%pS)\n",
++		       	__func__,__LINE__,(void*)__builtin_return_address(0));
+ 	/*
+ 	 * debugobject calls are safe here even with pool->lock locked
+ 	 * as we know for sure that this will not trigger any of the
+
+commit cbfae15bf27d468d885dc1b59180a36c3d646af3
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Wed Dec 3 14:56:00 2025 +0900
+
+    proc
+
+diff --git a/kernel/irq/proc.c b/kernel/irq/proc.c
+index e8c655b7a..43776cf66 100644
+--- a/kernel/irq/proc.c
++++ b/kernel/irq/proc.c
+@@ -471,6 +471,20 @@ int __weak arch_show_interrupts(struct seq_file *p, int prec)
+ # define ACTUAL_NR_IRQS nr_irqs
+ #endif
+ 
++void rpi_get_interrupt_info(struct irqaction *action_p)
++{	
++	unsigned int irq_num = action_p->irq;
++	void *irq_handler = NULL;
++
++	if (action_p->handler){
++		irq_handler = (void*)action_p->handler;
++	}
++
++	if (irq_handler){
++		trace_printk("[%s] %d: %s, irq_handler: %pS \n", current->comm, irq_num, action_p->name, irq_handler);
++	}
++}
++
+ int show_interrupts(struct seq_file *p, void *v)
+ {
+ 	static int prec;
+@@ -536,6 +550,10 @@ int show_interrupts(struct seq_file *p, void *v)
+ 		seq_printf(p, "-%-8s", desc->name);
+ 
+ 	action = desc->action;
++
++	if (action)
++		rpi_get_interrupt_info(action);
++
+ 	if (action) {
+ 		seq_printf(p, "  %s", action->name);
+ 		while ((action = action->next) != NULL)
+
+commit 20a9a0acf70c015e5b15dd4f0f5b49d10e7d3c93
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Mon Dec 1 18:38:33 2025 +0900
+
+    test
+
+diff --git a/test.txt b/test.txt
+new file mode 100644
+index 000000000..5002b74e8
+--- /dev/null
++++ b/test.txt
+@@ -0,0 +1 @@
++aaa:
