@@ -1,0 +1,138 @@
+1690  execve("./simple_exit", ["./simple_exit"], 0x7e81638c /* 42 vars */) = 0
+1690  brk(NULL)                         = 0x1e14000
+1690  uname({sysname="Linux", nodename="raspberrypi", ...}) = 0
+1690  mmap2(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x76f4e000
+1690  access("/etc/ld.so.preload", R_OK) = 0
+1690  openat(AT_FDCWD, "/etc/ld.so.preload", O_RDONLY|O_LARGEFILE|O_CLOEXEC) = 3
+1690  fstat64(3, {st_mode=S_IFREG|0644, st_size=54, ...}) = 0
+1690  mmap2(NULL, 54, PROT_READ|PROT_WRITE, MAP_PRIVATE, 3, 0) = 0x76f4d000
+1690  close(3)                          = 0
+1690  readlink("/proc/self/exe", "/home/kana/git_rpi/linux_debug/c"..., 4096) = 67
+1690  openat(AT_FDCWD, "/usr/lib/arm-linux-gnueabihf/libarmmem-v7l.so", O_RDONLY|O_LARGEFILE|O_CLOEXEC) = 3
+1690  read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0(\0\1\0\0\0\254\3\0\0004\0\0\0"..., 512) = 512
+1690  _llseek(3, 16748, [16748], SEEK_SET) = 0
+1690  read(3, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 960) = 960
+1690  _llseek(3, 16424, [16424], SEEK_SET) = 0
+1690  read(3, "A,\0\0\0aeabi\0\1\"\0\0\0\0056\0\6\6\10\1\t\2\n\3\f\1\22\4\24"..., 45) = 45
+1690  _llseek(3, 16748, [16748], SEEK_SET) = 0
+1690  read(3, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 960) = 960
+1690  _llseek(3, 16424, [16424], SEEK_SET) = 0
+1690  read(3, "A,\0\0\0aeabi\0\1\"\0\0\0\0056\0\6\6\10\1\t\2\n\3\f\1\22\4\24"..., 45) = 45
+1690  _llseek(3, 16748, [16748], SEEK_SET) = 0
+1690  read(3, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 960) = 960
+1690  _llseek(3, 16424, [16424], SEEK_SET) = 0
+1690  read(3, "A,\0\0\0aeabi\0\1\"\0\0\0\0056\0\6\6\10\1\t\2\n\3\f\1\22\4\24"..., 45) = 45
+1690  _llseek(3, 16748, [16748], SEEK_SET) = 0
+1690  read(3, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 960) = 960
+1690  _llseek(3, 16424, [16424], SEEK_SET) = 0
+1690  read(3, "A,\0\0\0aeabi\0\1\"\0\0\0\0056\0\6\6\10\1\t\2\n\3\f\1\22\4\24"..., 45) = 45
+1690  _llseek(3, 16748, [16748], SEEK_SET) = 0
+1690  read(3, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 960) = 960
+1690  _llseek(3, 16424, [16424], SEEK_SET) = 0
+1690  read(3, "A,\0\0\0aeabi\0\1\"\0\0\0\0056\0\6\6\10\1\t\2\n\3\f\1\22\4\24"..., 45) = 45
+1690  _llseek(3, 16748, [16748], SEEK_SET) = 0
+1690  read(3, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 960) = 960
+1690  _llseek(3, 16424, [16424], SEEK_SET) = 0
+1690  read(3, "A,\0\0\0aeabi\0\1\"\0\0\0\0056\0\6\6\10\1\t\2\n\3\f\1\22\4\24"..., 45) = 45
+1690  fstat64(3, {st_mode=S_IFREG|0644, st_size=17708, ...}) = 0
+1690  mmap2(NULL, 81964, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x76f0b000
+1690  mprotect(0x76f0f000, 61440, PROT_NONE) = 0
+1690  mmap2(0x76f1e000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x3000) = 0x76f1e000
+1690  close(3)                          = 0
+1690  munmap(0x76f4d000, 54)            = 0
+1690  openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_LARGEFILE|O_CLOEXEC) = 3
+1690  fstat64(3, {st_mode=S_IFREG|0644, st_size=80436, ...}) = 0
+1690  mmap2(NULL, 80436, PROT_READ, MAP_PRIVATE, 3, 0) = 0x76ef7000
+1690  close(3)                          = 0
+1690  openat(AT_FDCWD, "/lib/arm-linux-gnueabihf/libc.so.6", O_RDONLY|O_LARGEFILE|O_CLOEXEC) = 3
+1690  read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0(\0\1\0\0\0\300x\1\0004\0\0\0"..., 512) = 512
+1690  _llseek(3, 1293204, [1293204], SEEK_SET) = 0
+1690  read(3, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 2800) = 2800
+1690  _llseek(3, 1289788, [1289788], SEEK_SET) = 0
+1690  read(3, "A.\0\0\0aeabi\0\1$\0\0\0\0056\0\6\6\10\1\t\1\n\2\22\4\23\1\24"..., 47) = 47
+1690  _llseek(3, 1293204, [1293204], SEEK_SET) = 0
+1690  read(3, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 2800) = 2800
+1690  _llseek(3, 1289788, [1289788], SEEK_SET) = 0
+1690  read(3, "A.\0\0\0aeabi\0\1$\0\0\0\0056\0\6\6\10\1\t\1\n\2\22\4\23\1\24"..., 47) = 47
+1690  _llseek(3, 1293204, [1293204], SEEK_SET) = 0
+1690  read(3, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 2800) = 2800
+1690  _llseek(3, 1289788, [1289788], SEEK_SET) = 0
+1690  read(3, "A.\0\0\0aeabi\0\1$\0\0\0\0056\0\6\6\10\1\t\1\n\2\22\4\23\1\24"..., 47) = 47
+1690  _llseek(3, 1293204, [1293204], SEEK_SET) = 0
+1690  read(3, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 2800) = 2800
+1690  _llseek(3, 1289788, [1289788], SEEK_SET) = 0
+1690  read(3, "A.\0\0\0aeabi\0\1$\0\0\0\0056\0\6\6\10\1\t\1\n\2\22\4\23\1\24"..., 47) = 47
+1690  _llseek(3, 1293204, [1293204], SEEK_SET) = 0
+1690  read(3, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 2800) = 2800
+1690  _llseek(3, 1289788, [1289788], SEEK_SET) = 0
+1690  read(3, "A.\0\0\0aeabi\0\1$\0\0\0\0056\0\6\6\10\1\t\1\n\2\22\4\23\1\24"..., 47) = 47
+1690  _llseek(3, 1293204, [1293204], SEEK_SET) = 0
+1690  read(3, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 2800) = 2800
+1690  _llseek(3, 1289788, [1289788], SEEK_SET) = 0
+1690  read(3, "A.\0\0\0aeabi\0\1$\0\0\0\0056\0\6\6\10\1\t\1\n\2\22\4\23\1\24"..., 47) = 47
+1690  fstat64(3, {st_mode=S_IFREG|0755, st_size=1296004, ...}) = 0
+1690  mmap2(NULL, 1364764, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x76da9000
+1690  mprotect(0x76ee1000, 65536, PROT_NONE) = 0
+1690  mmap2(0x76ef1000, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x138000) = 0x76ef1000
+1690  mmap2(0x76ef4000, 8988, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0x76ef4000
+1690  close(3)                          = 0
+1690  set_tls(0x76f4f190)               = 0
+1690  mprotect(0x76ef1000, 8192, PROT_READ) = 0
+1690  mprotect(0x76f1e000, 4096, PROT_READ) = 0
+1690  mprotect(0x20000, 4096, PROT_READ) = 0
+1690  mprotect(0x76f50000, 4096, PROT_READ) = 0
+1690  munmap(0x76ef7000, 80436)         = 0
+1690  fstat64(1, {st_mode=S_IFCHR|0620, st_rdev=makedev(0x88, 0), ...}) = 0
+1690  brk(NULL)                         = 0x1e14000
+1690  brk(0x1e35000)                    = 0x1e35000
+1690  write(1, "About to fork process \n", 23) = 23
+1690  openat(AT_FDCWD, "/home/kana/git_rpi/linux_debug/codes/testcode/test_11.7/sample_text.txt", O_RDWR) = 3
+1690  read(3, ".\nRaspbian Linux\nRaspbian Linux\n"..., 256) = 47
+1690  write(1, ".\nRaspbian Linux\nRaspbian Linux\n"..., 47) = 47
+1690  write(3, "Raspbian Linux\n", 15)  = 15
+1690  _llseek(3, 0, [0], SEEK_SET)      = 0
+1690  read(3, ".\nRaspbian Linux\nRaspbian Linux\n"..., 256) = 62
+1690  write(1, "read again \n", 12)     = 12
+1690  write(1, "[+]read_buffer: .\nRaspbian Linux"..., 78) = 78
+1690  write(1, " \n", 2)                = 2
+1690  close(3)                          = 0
+1690  clone(child_stack=NULL, flags=CLONE_CHILD_CLEARTID|CLONE_CHILD_SETTID|SIGCHLD, child_tidptr=0x76f4ed38) = 1691
+1690  write(1, "start execution of parent proces"..., 34) = 34
+1691  write(1, "start execution of child process"..., 33) = 33
+1690  getppid()                         = 1687
+1691  getppid( <unfinished ...>
+1690  getpid( <unfinished ...>
+1691  <... getppid resumed> )           = 1690
+1690  <... getpid resumed> )            = 1690
+1691  getpid( <unfinished ...>
+1690  write(1, "raspbian tracing ppid:1687 pid:1"..., 37 <unfinished ...>
+1691  <... getpid resumed> )            = 1691
+1690  <... write resumed> )             = 37
+1691  write(1, "raspbian tracing ppid:1690 pid:1"..., 37 <unfinished ...>
+1690  nanosleep({tv_sec=2, tv_nsec=0},  <unfinished ...>
+1691  <... write resumed> )             = 37
+1691  nanosleep({tv_sec=2, tv_nsec=0},  <unfinished ...>
+1690  <... nanosleep resumed> 0x7e90f20c) = 0
+1691  <... nanosleep resumed> 0x7e90f20c) = 0
+1690  getppid( <unfinished ...>
+1691  getppid( <unfinished ...>
+1690  <... getppid resumed> )           = 1687
+1691  <... getppid resumed> )           = 1690
+1690  getpid( <unfinished ...>
+1691  getpid( <unfinished ...>
+1690  <... getpid resumed> )            = 1690
+1691  <... getpid resumed> )            = 1691
+1690  write(1, "raspbian tracing ppid:1687 pid:1"..., 37 <unfinished ...>
+1691  write(1, "raspbian tracing ppid:1690 pid:1"..., 37 <unfinished ...>
+1690  <... write resumed> )             = 37
+1691  <... write resumed> )             = 37
+1690  nanosleep({tv_sec=2, tv_nsec=0},  <unfinished ...>
+1691  nanosleep({tv_sec=2, tv_nsec=0},  <unfinished ...>
+1690  <... nanosleep resumed> 0x7e90f20c) = 0
+1691  <... nanosleep resumed> 0x7e90f20c) = 0
+1690  exit_group(0 <unfinished ...>
+1691  exit_group(0 <unfinished ...>
+1690  <... exit_group resumed>)         = ?
+1691  <... exit_group resumed>)         = ?
+1690  +++ exited with 0 +++
+1691  +++ exited with 0 +++
