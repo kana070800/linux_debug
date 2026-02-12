@@ -1,3 +1,244 @@
+commit df68fef281c3b13c8266e89164925ea6e91003ff
+Author: cho hyeon jun <kanawer070800@gmail.com>
+Date:   Wed Feb 11 23:50:08 2026 +0900
+
+    12
+
+diff --git a/arch/arm/kernel/signal.c b/arch/arm/kernel/signal.c
+index b908382b6..ecb787254 100644
+--- a/arch/arm/kernel/signal.c
++++ b/arch/arm/kernel/signal.c
+@@ -475,7 +475,9 @@ setup_return(struct pt_regs *regs, struct ksignal *ksig,
+ 			retcode = ((unsigned long)rc) + thumb;
+ 		}
+ 	}
+-
++	//---change at 2026-2-11----for 12.8.3----------------
++	trace_printk("[+] handler:0x%lx, sig:%d \n", (unsigned long)handler, ksig->sig);
++	//--------------------------------------------------
+ 	regs->ARM_r0 = ksig->sig;
+ 	regs->ARM_sp = (unsigned long)frame;
+ 	regs->ARM_lr = retcode;
+diff --git a/drivers/soc/bcm/Makefile b/drivers/soc/bcm/Makefile
+index 366ce3e92..c81df4b24 100644
+--- a/drivers/soc/bcm/Makefile
++++ b/drivers/soc/bcm/Makefile
+@@ -1,4 +1,3 @@
+-obj-y += rpi_debugfs.o 
+ obj-$(CONFIG_BCM2835_POWER)	+= bcm2835-power.o
+ obj-$(CONFIG_RASPBERRYPI_POWER)	+= raspberrypi-power.o
+ obj-$(CONFIG_SOC_BRCMSTB)	+= brcmstb/
+diff --git a/drivers/soc/bcm/rpi_debugfs.c b/drivers/soc/bcm/rpi_debugfs.c
+index e09cd7a44..c69a252fa 100644
+--- a/drivers/soc/bcm/rpi_debugfs.c
++++ b/drivers/soc/bcm/rpi_debugfs.c
+@@ -1,3 +1,6 @@
++#include <linux/mm.h>
++#include <linux/mm_types.h>
++
+ #include <linux/module.h>
+ #include <linux/moduleparam.h>
+ #include <linux/platform_device.h>
+@@ -17,8 +20,6 @@
+ #include <linux/slub_def.h>
+ #include <linux/uaccess.h>
+ #include <asm/memory.h>
+-#include <linux/mm.h>
+-#include <linux/mm_types.h>
+ 
+ uint32_t raspbian_debug_state = 0x1000;
+ static struct dentry *rpi_kernel_debug_debugfs_root;
+diff --git a/include/linux/slub_def.h b/include/linux/slub_def.h
+index f54082d26..3a1a1dbc6 100644
+--- a/include/linux/slub_def.h
++++ b/include/linux/slub_def.h
+@@ -8,7 +8,6 @@
+  * (C) 2007 SGI, Christoph Lameter
+  */
+ #include <linux/kobject.h>
+-#include <linux/mm.h>
+ 
+ enum stat_item {
+ 	ALLOC_FASTPATH,		/* Allocation from cpu slab */
+diff --git a/kernel/irq/handle.c b/kernel/irq/handle.c
+index d97723c27..38554bc35 100644
+--- a/kernel/irq/handle.c
++++ b/kernel/irq/handle.c
+@@ -133,9 +133,7 @@ void __irq_wake_thread(struct irq_desc *desc, struct irqaction *action)
+ 
+ 	wake_up_process(action->thread);
+ }
+-//--------at 2026-1-12---------for 3.6.1---------
+-extern uint32_t raspbian_debug_state;
+-//---------------------------------------------
++
+ irqreturn_t __handle_irq_event_percpu(struct irq_desc *desc, unsigned int *flags)
+ {
+ 	irqreturn_t retval = IRQ_NONE;
+@@ -146,13 +144,7 @@ irqreturn_t __handle_irq_event_percpu(struct irq_desc *desc, unsigned int *flags
+ 
+ 	for_each_action_of_desc(desc, action) {
+ 		irqreturn_t res;
+-//-----------------------------------------------------------
+-		if (825 == raspbian_debug_state){
+-			void *irq_handler = (void*)action->handler;
+-			trace_printk("[+] irq_num:[%d] handler: %pS caller:(%pS) \n",
+-					irq, irq_handler, (void*)__builtin_return_address(0));
+-		}
+-//-----------------------------------------------------------
++
+ 		trace_irq_handler_entry(irq, action);
+ 		res = action->handler(irq, action->dev_id);
+ 		trace_irq_handler_exit(irq, action, res);
+diff --git a/kernel/irq/proc.c b/kernel/irq/proc.c
+index 277cb9ad4..e8c655b7a 100644
+--- a/kernel/irq/proc.c
++++ b/kernel/irq/proc.c
+@@ -536,7 +536,6 @@ int show_interrupts(struct seq_file *p, void *v)
+ 		seq_printf(p, "-%-8s", desc->name);
+ 
+ 	action = desc->action;
+-
+ 	if (action) {
+ 		seq_printf(p, "  %s", action->name);
+ 		while ((action = action->next) != NULL)
+diff --git a/kernel/locking/mutex.c b/kernel/locking/mutex.c
+index 9d4433cbd..3f8a35104 100644
+--- a/kernel/locking/mutex.c
++++ b/kernel/locking/mutex.c
+@@ -249,30 +249,12 @@ static void __sched __mutex_lock_slowpath(struct mutex *lock);
+  *
+  * This function is similar to (but not equivalent to) down().
+  */
+-
+-extern uint32_t raspbian_debug_state;
+-
+ void __sched mutex_lock(struct mutex *lock)
+ {
+-	//----at 2026-1-17---for 9.6-----------------
+-	void *mutex_addr = NULL;
+-
+-	if (902 == raspbian_debug_state){
+-		mutex_addr = (void*)lock;
+-		trace_printk("[+][fastpath] mutex_lock[%p] start.. owner:0x%lx, current_process:%lx \n",
+-				mutex_addr, atomic_long_read(&lock->owner), (long)current);
+-	}
+-
+ 	might_sleep();
+ 
+ 	if (!__mutex_trylock_fast(lock))
+ 		__mutex_lock_slowpath(lock);
+-
+-	if (902 == raspbian_debug_state){
+-		
+-		trace_printk("[+][fastpath] mutex_lock[%p] end.. owner:0x%lx, current_process:%lx \n",
+-				mutex_addr, atomic_long_read(&lock->owner), (long)current);
+-	}
+ }
+ EXPORT_SYMBOL(mutex_lock);
+ #endif
+@@ -724,23 +706,9 @@ static noinline void __sched __mutex_unlock_slowpath(struct mutex *lock, unsigne
+  */
+ void __sched mutex_unlock(struct mutex *lock)
+ {
+-	void *mutex_addr = NULL;
+-
+-	if (902 == raspbian_debug_state){
+-		mutex_addr = (void *)lock;
+-		trace_printk("[-][fastpath] mutex_unlock[%p] start.. owner:0x%lx, current_process:%lx \n",
+-				mutex_addr, atomic_long_read(&lock->owner), (long)current);
+-	}
+ #ifndef CONFIG_DEBUG_LOCK_ALLOC
+-	/*if (__mutex_unlock_fast(lock))
+-		return;*/
+-	if (__mutex_unlock_fast(lock)){
+-		if (902 == raspbian_debug_state){
+-			trace_printk("[-][fastpath] mutex_unlock[%p] end.. owner:0x%lx, current_process:%lx \n",
+-				mutex_addr, atomic_long_read(&lock->owner), (long)current);
+-		}
++	if (__mutex_unlock_fast(lock))
+ 		return;
+-	}
+ #endif
+ 	__mutex_unlock_slowpath(lock, _RET_IP_);
+ }
+diff --git a/kernel/locking/spinlock.c b/kernel/locking/spinlock.c
+index c09073404..936f3d14d 100644
+--- a/kernel/locking/spinlock.c
++++ b/kernel/locking/spinlock.c
+@@ -22,7 +22,6 @@
+ #include <linux/debug_locks.h>
+ #include <linux/export.h>
+ 
+-#include <linux/sched.h>
+ /*
+  * If lockdep is enabled then we use the non-preemption spin-ops
+  * even on CONFIG_PREEMPT, because lockdep assumes that interrupts are
+@@ -147,28 +146,10 @@ void __lockfunc _raw_spin_lock(raw_spinlock_t *lock)
+ EXPORT_SYMBOL(_raw_spin_lock);
+ #endif
+ 
+-extern uint32_t raspbian_debug_state;
+-
+ #ifndef CONFIG_INLINE_SPIN_LOCK_IRQSAVE
+ unsigned long __lockfunc _raw_spin_lock_irqsave(raw_spinlock_t *lock)
+ {
+-	//return __raw_spin_lock_irqsave(lock);
+-	//at 2026-1-17---for 9.6----------------------------------------
+-	unsigned long ret_flags;
+-	arch_spinlock_t lockval;
+-
+-	if (901 == raspbian_debug_state){
+-		lockval = lock->raw_lock;
+-		trace_printk("[+] start spin_lock[%p] owner: 0x%x, next: 0x%x, process:%p \n",
+-				lock, lockval.tickets.owner, lockval.tickets.next, current);
+-	}
+-	ret_flags = __raw_spin_lock_irqsave(lock);
+-	if (901 == raspbian_debug_state){
+-		lockval = lock->raw_lock;
+-		trace_printk("[+] end spin_lock[%p] owner: 0x%x, next: 0x%x, process:%p \n",
+-				lock, lockval.tickets.owner, lockval.tickets.next, current);
+-	}
+-	return ret_flags;
++	return __raw_spin_lock_irqsave(lock);
+ }
+ EXPORT_SYMBOL(_raw_spin_lock_irqsave);
+ #endif
+@@ -200,19 +181,7 @@ EXPORT_SYMBOL(_raw_spin_unlock);
+ #ifndef CONFIG_INLINE_SPIN_UNLOCK_IRQRESTORE
+ void __lockfunc _raw_spin_unlock_irqrestore(raw_spinlock_t *lock, unsigned long flags)
+ {
+-	arch_spinlock_t lockval;
+-	if (901 == raspbian_debug_state){
+-		lockval = lock->raw_lock;
+-		trace_printk("[-] start spin_unclok[%p] owner: 0x%x, next: 0x%x, process:%p \n",
+-				lock, lockval.tickets.owner, lockval.tickets.next, current);
+-	}
+ 	__raw_spin_unlock_irqrestore(lock, flags);
+-	if (901 == raspbian_debug_state){
+-		lockval = lock->raw_lock;
+-		trace_printk("[-] end spin_unlock[%p] owner: 0x%x, next: 0x%x, process:%p \n",
+-				lock, lockval.tickets.owner, lockval.tickets.next, current);
+-	}
+-	
+ }
+ EXPORT_SYMBOL(_raw_spin_unlock_irqrestore);
+ #endif
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 17afca797..2befd2c4c 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -3510,8 +3510,7 @@ static void __sched notrace __schedule(bool preempt)
+ 		++*switch_count;
+ 
+ 		trace_sched_switch(preempt, prev, next);
+-		//at 2026-1-19---for 10.2.4---------
+-		trace_printk("[+] prev->state:%d, next->state: %d \n", prev->state, next->state);
++
+ 		/* Also unlocks the rq: */
+ 		rq = context_switch(rq, prev, next, &rf);
+ 	} else {
+
 commit f127eb94582932f48894dfc022df3326ca5f5b6c
 Author: cho hyeon jun <kanawer070800@gmail.com>
 Date:   Wed Jan 21 19:32:39 2026 +0900
